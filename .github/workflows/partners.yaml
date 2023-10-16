@@ -11,15 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        network: [ mainnet, ftm-main ]
+        network: [ mainnet ]
         include:
         # Providers for all chains.
         - network: mainnet
           label: ETH
           provider: WEB3_PROVIDER
-        - network: ftm-main
-          label: FTM
-          provider: FTM_WEB3_PROVIDER
       fail-fast: false
 
     steps:
@@ -39,31 +36,9 @@ jobs:
       
       - name: Setup brownie networks
         run: brownie networks modify ${{ matrix.network }} host=${{ secrets[matrix.provider] }}
-      
-      - uses: actions/download-artifact@v3
-        with:
-          name: joblib-cache
-          path: cache
 
       - name: Partners Summary
         env:
-          # Explorer tokens for all chains:
+          # Explorer tokens for all chains :
           ETHERSCAN_TOKEN: ${{ secrets.ETHERSCAN_TOKEN }}
-          FTMSCAN_TOKEN: ${{ secrets.FTMSCAN_TOKEN }}
-          YPRICEAPI_SIGNER: ${{ secrets.YPRICEAPI_SIGNER }}
-          YPRICEAPI_SIGNATURE: ${{ secrets.YPRICEAPI_SIGNATURE }}
         run: brownie run partners_summary --network ${{ matrix.network }}
-      
-      - uses: actions/upload-artifact@v3
-        with:
-          name: joblib-cache
-          path: cache
-      
-      - name: Install Telebot
-        run: pip install pyTelegramBotAPI==4.6.0
-      
-      - name: Robowoofy Upload File
-        env:
-          B2B_TELEGRAM_ID: ${{ secrets.B2B_TELEGRAM_ID }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-        run: brownie run robowoofy/post_partners --network ${{ matrix.network }}
